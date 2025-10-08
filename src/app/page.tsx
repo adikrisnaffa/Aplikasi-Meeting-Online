@@ -15,9 +15,6 @@ import { Button } from '@/components/ui/button';
 
 const participants = [
   { id: 1, name: 'You', avatar: 'user1', isMuted: true, isSpeaking: false, isYou: true },
-  { id: 2, name: 'Alice', avatar: 'user2', isMuted: false, isSpeaking: true },
-  { id: 3, name: 'Bob', avatar: 'user3', isMuted: true, isSpeaking: false },
-  { id: 4, name: 'Charlie', avatar: 'user4', isMuted: false, isSpeaking: false },
 ];
 
 export default function Home() {
