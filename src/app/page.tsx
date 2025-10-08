@@ -28,6 +28,9 @@ export default function Home() {
   const [isMuted, setIsMuted] = useState(true);
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const screenShareStream = useRef<MediaStream | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     const getPermissions = async () => {
@@ -119,6 +122,74 @@ export default function Home() {
     }
   }
 
+  const toggleRecording = () => {
+    if (!isRecording) {
+      startRecording();
+    } else {
+      stopRecording();
+    }
+  };
+
+  const startRecording = () => {
+    const stream = isScreenSharing ? screenShareStream.current : mediaStream;
+    if (!stream) {
+      toast({
+        variant: "destructive",
+        title: "Recording Error",
+        description: "No media stream available to record.",
+      });
+      return;
+    }
+
+    try {
+      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: 'video/webm' });
+      recordedChunksRef.current = [];
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorderRef.current.onstop = () => {
+        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `recording-${new Date().toISOString()}.webm`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      };
+
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+      toast({
+        title: "Recording Started",
+        description: "The meeting is now being recorded.",
+      });
+    } catch (error) {
+      console.error("Error starting recording:", error);
+      toast({
+        variant: "destructive",
+        title: "Recording Error",
+        description: "Could not start recording. Your browser may not support it.",
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      toast({
+        title: "Recording Stopped",
+        description: "Your recording will be downloaded shortly.",
+      });
+    }
+  };
+
   const localParticipant = participants.find(p => p.isYou);
 
   return (
@@ -198,6 +269,8 @@ export default function Home() {
         onToggleVideo={toggleVideo}
         isMuted={isMuted}
         onToggleMute={toggleMute}
+        isRecording={isRecording}
+        onToggleRecording={toggleRecording}
       />
     </div>
   );

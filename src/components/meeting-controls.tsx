@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from 'react';
 import { Mic, MicOff, Video, VideoOff, ScreenShare, CircleDot, PhoneOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -15,10 +14,11 @@ type MeetingControlsProps = {
   onToggleVideo: () => void;
   isMuted: boolean;
   onToggleMute: () => void;
+  isRecording: boolean;
+  onToggleRecording: () => void;
 };
 
-export function MeetingControls({ isScreenSharing, onToggleScreenShare, isVideoOff, onToggleVideo, isMuted, onToggleMute }: MeetingControlsProps) {
-  const [isRecording, setIsRecording] = useState(false);
+export function MeetingControls({ isScreenSharing, onToggleScreenShare, isVideoOff, onToggleVideo, isMuted, onToggleMute, isRecording, onToggleRecording }: MeetingControlsProps) {
 
   const controlButtons = [
     {
@@ -40,7 +40,7 @@ export function MeetingControls({ isScreenSharing, onToggleScreenShare, isVideoO
     {
       label: isRecording ? 'Stop Recording' : 'Record',
       icon: <CircleDot className="h-6 w-6" />,
-      onClick: () => setIsRecording(!isRecording),
+      onClick: onToggleRecording,
       active: isRecording,
       isRecordingButton: true,
     },
