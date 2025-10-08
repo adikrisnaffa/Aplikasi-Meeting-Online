@@ -17,7 +17,7 @@ const participants = [
   { id: 1, name: 'You', avatar: 'user1', isMuted: true, isSpeaking: false, isYou: true },
 ];
 
-function MeetingRoom({ meetingId }: { meetingId: string }) {
+function MeetingRoom({ meetingId: meetingIdProp }: { meetingId: string }) {
   const searchParams = useSearchParams();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | undefined>(undefined);
@@ -31,11 +31,14 @@ function MeetingRoom({ meetingId }: { meetingId: string }) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const [hasLeftMeeting, setHasLeftMeeting] = useState(false);
+  const [meetingId, setMeetingId] = useState('');
   const meetingName = searchParams.get('name') || "Meeting";
 
   useEffect(() => {
+    // This runs only on the client, avoiding hydration errors
+    setMeetingId(meetingIdProp);
     getPermissions();
-  }, []);
+  }, [meetingIdProp]);
 
   const getPermissions = async () => {
     try {
@@ -303,10 +306,9 @@ function MeetingRoom({ meetingId }: { meetingId: string }) {
 
 
 export default function MeetingPage({ params }: { params: { meetingId: string } }) {
-  const meetingId = params.meetingId;
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <MeetingRoom meetingId={meetingId} />
+      <MeetingRoom meetingId={params.meetingId} />
     </Suspense>
   )
 }
