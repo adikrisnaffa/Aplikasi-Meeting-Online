@@ -22,13 +22,17 @@ export default function Home() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | undefined>(undefined);
   const { toast } = useToast();
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const screenShareStream = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     const getCameraPermission = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         setHasCameraPermission(true);
-
+        setCameraStream(stream);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
@@ -44,8 +48,62 @@ export default function Home() {
     };
 
     getCameraPermission();
+
+    return () => {
+      cameraStream?.getTracks().forEach(track => track.stop());
+    }
   }, [toast]);
-  
+
+  const toggleVideo = () => {
+    if (cameraStream) {
+      cameraStream.getVideoTracks().forEach(track => {
+        track.enabled = isVideoOff;
+      });
+      setIsVideoOff(!isVideoOff);
+      if (videoRef.current && !isScreenSharing) {
+        if (isVideoOff) {
+          videoRef.current.srcObject = cameraStream;
+        } else {
+          videoRef.current.srcObject = null;
+        }
+      }
+    }
+  };
+
+  const toggleScreenShare = async () => {
+    if (!isScreenSharing) {
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        screenShareStream.current = stream;
+        setIsScreenSharing(true);
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+        stream.getVideoTracks()[0].onended = () => {
+          stopScreenShare();
+        };
+      } catch (error) {
+        console.error("Error sharing screen:", error);
+        setIsScreenSharing(false);
+      }
+    } else {
+      stopScreenShare();
+    }
+  };
+
+  const stopScreenShare = () => {
+    screenShareStream.current?.getTracks().forEach(track => track.stop());
+    screenShareStream.current = null;
+    setIsScreenSharing(false);
+    if (videoRef.current) {
+      if (cameraStream && !isVideoOff) {
+        videoRef.current.srcObject = cameraStream;
+      } else {
+        videoRef.current.srcObject = null;
+      }
+    }
+  }
+
   const localParticipant = participants.find(p => p.isYou);
 
   return (
@@ -66,8 +124,16 @@ export default function Home() {
             >
               <div className="flex h-full w-full items-center justify-center bg-muted/50">
                 <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted />
+                 {(isVideoOff || (isScreenSharing && !screenShareStream.current)) && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                        <Avatar className="h-24 w-24 text-4xl lg:h-32 lg:w-32">
+                            <AvatarImage src={PlaceHolderImages.find(p => p.id === localParticipant.avatar)?.imageUrl} alt={localParticipant.name} />
+                            <AvatarFallback>{localParticipant.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                    </div>
+                 )}
               </div>
-              {hasCameraPermission === false && (
+              {hasCameraPermission === false && !isScreenSharing && (
                 <div className="absolute inset-0 flex items-center justify-center p-4">
                   <Alert variant="destructive">
                     <AlertTitle>Camera Access Required</AlertTitle>
@@ -106,7 +172,12 @@ export default function Home() {
             })}
         </div>
       </main>
-      <MeetingControls />
+      <MeetingControls 
+        isScreenSharing={isScreenSharing}
+        onToggleScreenShare={toggleScreenShare}
+        isVideoOff={isVideoOff}
+        onToggleVideo={toggleVideo}
+      />
     </div>
   );
 }

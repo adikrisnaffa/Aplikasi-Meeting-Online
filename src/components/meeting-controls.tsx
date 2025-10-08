@@ -8,10 +8,15 @@ import { InvitationButton } from './invitation-button';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
-export function MeetingControls() {
+type MeetingControlsProps = {
+  isScreenSharing: boolean;
+  onToggleScreenShare: () => void;
+  isVideoOff: boolean;
+  onToggleVideo: () => void;
+};
+
+export function MeetingControls({ isScreenSharing, onToggleScreenShare, isVideoOff, onToggleVideo }: MeetingControlsProps) {
   const [isMuted, setIsMuted] = useState(true);
-  const [isVideoOff, setIsVideoOff] = useState(false);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
 
   const controlButtons = [
@@ -23,12 +28,12 @@ export function MeetingControls() {
     {
       label: isVideoOff ? 'Start Video' : 'Stop Video',
       icon: isVideoOff ? <VideoOff className="h-6 w-6" /> : <Video className="h-6 w-6" />,
-      onClick: () => setIsVideoOff(!isVideoOff),
+      onClick: onToggleVideo,
     },
     {
       label: isScreenSharing ? 'Stop Sharing' : 'Share Screen',
       icon: <ScreenShare className="h-6 w-6" />,
-      onClick: () => setIsScreenSharing(!isScreenSharing),
+      onClick: onToggleScreenShare,
       active: isScreenSharing,
     },
     {
