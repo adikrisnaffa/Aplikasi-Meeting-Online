@@ -311,12 +311,14 @@ function MeetingRoom({ meetingId: meetingIdProp }: { meetingId: string }) {
   );
 }
 
-
-export default function MeetingPage({ params }: { params: { meetingId: string } }) {
-  // Directly pass the meetingId to the child component
+function Page({ params }: { params: { meetingId: string } }) {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <MeetingRoom meetingId={params.meetingId} />
     </Suspense>
-  )
+  );
 }
+
+export default Page;
+
+    
