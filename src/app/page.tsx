@@ -3,15 +3,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { MeetingControls } from '@/components/meeting-controls';
-import { ParticipantVideo } from '@/components/participant-video';
 import { Logo } from '@/components/logo';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Mic, MicOff, VideoIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const participants = [
   { id: 1, name: 'You', avatar: 'user1', isMuted: true, isSpeaking: false, isYou: true },
@@ -31,6 +32,8 @@ export default function Home() {
   const recordedChunksRef = useRef<Blob[]>([]);
   const [hasLeftMeeting, setHasLeftMeeting] = useState(false);
   const [meetingId, setMeetingId] = useState('');
+  const [meetingStarted, setMeetingStarted] = useState(false);
+  const [meetingName, setMeetingName] = useState('');
 
   useEffect(() => {
     const generateMeetingId = () => {
@@ -42,36 +45,49 @@ export default function Home() {
     setMeetingId(generateMeetingId());
   }, []);
 
-  useEffect(() => {
-    const getPermissions = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        setHasCameraPermission(true);
-        setMediaStream(stream);
-
-        // Initially mute audio
-        stream.getAudioTracks().forEach(track => track.enabled = false);
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (error) {
-        console.error('Error accessing media devices:', error);
-        setHasCameraPermission(false);
+  const startMeeting = () => {
+    if(!meetingName) {
         toast({
-          variant: 'destructive',
-          title: 'Access Denied',
-          description: 'Please enable camera and microphone permissions in your browser settings.',
+            variant: "destructive",
+            title: "Meeting name is required",
+            description: "Please enter a name for your meeting.",
         });
-      }
-    };
-
-    getPermissions();
-
-    return () => {
-      mediaStream?.getTracks().forEach(track => track.stop());
+        return;
     }
-  }, [toast]);
+    getPermissions();
+    setMeetingStarted(true);
+  }
+
+  const getPermissions = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      setHasCameraPermission(true);
+      setMediaStream(stream);
+
+      // Initially mute audio
+      stream.getAudioTracks().forEach(track => track.enabled = false);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      console.error('Error accessing media devices:', error);
+      setHasCameraPermission(false);
+      toast({
+        variant: 'destructive',
+        title: 'Access Denied',
+        description: 'Please enable camera and microphone permissions in your browser settings.',
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (meetingStarted) {
+        return () => {
+            mediaStream?.getTracks().forEach(track => track.stop());
+        }
+    }
+  }, [meetingStarted, mediaStream]);
 
   const toggleVideo = () => {
     if (mediaStream) {
@@ -217,6 +233,45 @@ export default function Home() {
 
   const localParticipant = participants.find(p => p.isYou);
 
+  if (!meetingStarted) {
+    return (
+        <div className="flex h-screen w-full flex-col bg-background">
+            <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:px-6">
+                <Logo />
+            </header>
+            <main className="flex flex-1 items-center justify-center p-4">
+                <Card className="w-full max-w-md">
+                    <CardHeader>
+                        <CardTitle>Create a New Meeting</CardTitle>
+                        <CardDescription>Enter a name for your meeting to get started.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="meeting-name">Meeting Name</Label>
+                            <Input 
+                                id="meeting-name" 
+                                placeholder="E.g. Weekly Sync" 
+                                value={meetingName} 
+                                onChange={(e) => setMeetingName(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Meeting ID</Label>
+                            <div className="flex items-center gap-2">
+                                <Input value={meetingId} readOnly className="font-mono bg-muted" />
+                            </div>
+                            <p className="text-xs text-muted-foreground">This ID is generated automatically.</p>
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                        <Button className="w-full" onClick={startMeeting}>Start Meeting</Button>
+                    </CardFooter>
+                </Card>
+            </main>
+        </div>
+    );
+  }
+
   if (hasLeftMeeting) {
     return (
         <div className="flex h-screen w-full flex-col bg-background">
@@ -243,8 +298,9 @@ export default function Home() {
     <div className="flex h-screen w-full flex-col bg-background">
       <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:px-6">
         <Logo />
-        <div className="text-sm text-muted-foreground">
-        {meetingId && <p>Meeting ID: {meetingId}</p>}
+        <div className="text-sm text-muted-foreground text-right">
+            <div className="font-medium text-foreground">{meetingName}</div>
+            {meetingId && <p>Meeting ID: {meetingId}</p>}
         </div>
       </header>
       <main className="flex-1 overflow-auto p-4 md:p-6">
