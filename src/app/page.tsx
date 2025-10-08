@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, ChevronLeft, ChevronRight, CircleHelp, Feedback, Menu, Plus, Settings, Video, Grip, Phone } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, CircleHelp, Menu, Plus, Settings, Video, Grip, Phone, MessageSquareWarning } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import Image from 'next/image';
 
@@ -89,7 +89,7 @@ export default function LobbyPage() {
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span>12.12 &bull; Rab, 8 Okt</span>
             <CircleHelp className="h-5 w-5" />
-            <Feedback className="h-5 w-5" />
+            <MessageSquareWarning className="h-5 w-5" />
             <Settings className="h-5 w-5" />
             <Grip className="h-5 w-5" />
             <Avatar className="h-8 w-8">
