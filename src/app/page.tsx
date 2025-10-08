@@ -1,393 +1,121 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { MeetingControls } from '@/components/meeting-controls';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/logo';
-import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import { Mic, MicOff, VideoIcon, Calendar as CalendarIcon } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
 
-const participants = [
-  { id: 1, name: 'You', avatar: 'user1', isMuted: true, isSpeaking: false, isYou: true },
-];
-
-export default function Home() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | undefined>(undefined);
+export default function LobbyPage() {
+  const [newMeetingName, setNewMeetingName] = useState('');
+  const [joinMeetingId, setJoinMeetingId] = useState('');
+  const router = useRouter();
   const { toast } = useToast();
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
-  const screenShareStream = useRef<MediaStream | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const recordedChunksRef = useRef<Blob[]>([]);
-  const [hasLeftMeeting, setHasLeftMeeting] = useState(false);
-  const [meetingId, setMeetingId] = useState('');
-  const [meetingStarted, setMeetingStarted] = useState(false);
-  const [meetingName, setMeetingName] = useState('');
-  const [meetingDate, setMeetingDate] = useState<Date>();
 
-  useEffect(() => {
-    const generateMeetingId = () => {
-      const part1 = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-      const part2 = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-      const part3 = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-      return `${part1}-${part2}-${part3}`;
-    };
-    setMeetingId(generateMeetingId());
-  }, []);
-
-  const startMeeting = () => {
-    if(!meetingName) {
-        toast({
-            variant: "destructive",
-            title: "Meeting name is required",
-            description: "Please enter a name for your meeting.",
-        });
-        return;
-    }
-    getPermissions();
-    setMeetingStarted(true);
-  }
-
-  const getPermissions = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      setHasCameraPermission(true);
-      setMediaStream(stream);
-
-      // Initially mute audio
-      stream.getAudioTracks().forEach(track => track.enabled = false);
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (error) {
-      console.error('Error accessing media devices:', error);
-      setHasCameraPermission(false);
-      toast({
-        variant: 'destructive',
-        title: 'Access Denied',
-        description: 'Please enable camera and microphone permissions in your browser settings.',
-      });
-    }
+  const generateMeetingId = () => {
+    const part1 = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const part2 = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const part3 = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `${part1}-${part2}-${part3}`;
   };
 
-  useEffect(() => {
-    if (meetingStarted) {
-        return () => {
-            mediaStream?.getTracks().forEach(track => track.stop());
-        }
-    }
-  }, [meetingStarted, mediaStream]);
-
-  const toggleVideo = () => {
-    if (mediaStream) {
-      mediaStream.getVideoTracks().forEach(track => {
-        track.enabled = isVideoOff;
-      });
-      setIsVideoOff(!isVideoOff);
-      if (videoRef.current && !isScreenSharing) {
-        if (isVideoOff) {
-          videoRef.current.srcObject = mediaStream;
-        } else {
-          videoRef.current.srcObject = null;
-        }
-      }
-    }
-  };
-
-  const toggleMute = () => {
-    if (mediaStream) {
-      mediaStream.getAudioTracks().forEach(track => {
-        track.enabled = isMuted;
-      });
-      setIsMuted(!isMuted);
-    }
-  };
-
-  const toggleScreenShare = async () => {
-    if (!isScreenSharing) {
-      try {
-        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        screenShareStream.current = stream;
-        setIsScreenSharing(true);
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-        stream.getVideoTracks()[0].onended = () => {
-          stopScreenShare();
-        };
-      } catch (error) {
-        console.error("Error sharing screen:", error);
-        setIsScreenSharing(false);
-      }
-    } else {
-      stopScreenShare();
-    }
-  };
-
-  const stopScreenShare = () => {
-    screenShareStream.current?.getTracks().forEach(track => track.stop());
-    screenShareStream.current = null;
-    setIsScreenSharing(false);
-    if (videoRef.current) {
-      if (mediaStream && !isVideoOff) {
-        videoRef.current.srcObject = mediaStream;
-      } else {
-        videoRef.current.srcObject = null;
-      }
-    }
-  }
-
-  const toggleRecording = () => {
-    if (!isRecording) {
-      startRecording();
-    } else {
-      stopRecording();
-    }
-  };
-
-  const startRecording = () => {
-    const stream = isScreenSharing ? screenShareStream.current : mediaStream;
-    if (!stream) {
+  const handleCreateMeeting = () => {
+    if (!newMeetingName) {
       toast({
         variant: "destructive",
-        title: "Recording Error",
-        description: "No media stream available to record.",
+        title: "Meeting name is required",
+        description: "Please enter a name for your new meeting.",
       });
       return;
     }
+    const meetingId = generateMeetingId();
+    router.push(`/meeting/${meetingId}?name=${encodeURIComponent(newMeetingName)}`);
+  };
 
-    try {
-      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: 'video/webm' });
-      recordedChunksRef.current = [];
-
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          recordedChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorderRef.current.onstop = () => {
-        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `recording-${new Date().toISOString()}.webm`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      };
-
-      mediaRecorderRef.current.start();
-      setIsRecording(true);
-      toast({
-        title: "Recording Started",
-        description: "The meeting is now being recorded.",
-      });
-    } catch (error) {
-      console.error("Error starting recording:", error);
+  const handleJoinMeeting = () => {
+    if (!joinMeetingId) {
       toast({
         variant: "destructive",
-        title: "Recording Error",
-        description: "Could not start recording. Your browser may not support it.",
+        title: "Meeting ID is required",
+        description: "Please enter a meeting ID to join.",
       });
+      return;
     }
+    // Basic validation for meeting ID format
+    if (!/^\d{3}-\d{3}-\d{3}$/.test(joinMeetingId)) {
+        toast({
+            variant: "destructive",
+            title: "Invalid Meeting ID format",
+            description: "Please enter a valid ID (e.g., 123-456-789).",
+        });
+        return;
+    }
+    router.push(`/meeting/${joinMeetingId}`);
   };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      toast({
-        title: "Recording Stopped",
-        description: "Your recording will be downloaded shortly.",
-      });
-    }
-  };
-  
-  const leaveMeeting = () => {
-    mediaStream?.getTracks().forEach(track => track.stop());
-    screenShareStream.current?.getTracks().forEach(track => track.stop());
-    if (videoRef.current) {
-        videoRef.current.srcObject = null;
-    }
-    if (isRecording) {
-        stopRecording();
-    }
-    setHasLeftMeeting(true);
-    toast({
-        title: "You have left the meeting.",
-    });
-  }
-
-  const localParticipant = participants.find(p => p.isYou);
-
-  if (!meetingStarted) {
-    return (
-        <div className="flex h-screen w-full flex-col bg-background">
-            <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:px-6">
-                <Logo />
-            </header>
-            <main className="flex flex-1 items-center justify-center p-4">
-                <Card className="w-full max-w-md">
-                    <CardHeader>
-                        <CardTitle>Create a New Meeting</CardTitle>
-                        <CardDescription>Enter a name for your meeting to get started.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="meeting-name">Meeting Name</Label>
-                            <Input 
-                                id="meeting-name" 
-                                placeholder="E.g. Weekly Sync" 
-                                value={meetingName} 
-                                onChange={(e) => setMeetingName(e.target.value)}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="meeting-date">Meeting Date</Label>
-                           <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "w-full justify-start text-left font-normal",
-                                  !meetingDate && "text-muted-foreground"
-                                )}
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {meetingDate ? format(meetingDate, "PPP") : <span>Pick a date</span>}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                              <Calendar
-                                mode="single"
-                                selected={meetingDate}
-                                onSelect={setMeetingDate}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Meeting ID</Label>
-                            <div className="flex items-center gap-2">
-                                <Input value={meetingId} readOnly className="font-mono bg-muted" />
-                            </div>
-                            <p className="text-xs text-muted-foreground">This ID is generated automatically.</p>
-                        </div>
-                    </CardContent>
-                    <CardFooter>
-                        <Button className="w-full" onClick={startMeeting}>Start Meeting</Button>
-                    </CardFooter>
-                </Card>
-            </main>
-        </div>
-    );
-  }
-
-  if (hasLeftMeeting) {
-    return (
-        <div className="flex h-screen w-full flex-col bg-background">
-             <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:px-6">
-                <Logo />
-            </header>
-            <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
-                <div className="rounded-full bg-primary/10 p-4">
-                    <div className="rounded-full bg-primary/20 p-4">
-                        <VideoIcon className="h-12 w-12 text-primary" />
-                    </div>
-                </div>
-                <h1 className="text-2xl font-bold tracking-tight">You have left the meeting</h1>
-                <p className="max-w-md text-muted-foreground">
-                    You can close this window now. Thank you for using MeetUpGo!
-                </p>
-                <Button onClick={() => window.location.reload()}>Rejoin Meeting</Button>
-            </div>
-        </div>
-    );
-  }
 
   return (
     <div className="flex h-screen w-full flex-col bg-background">
       <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:px-6">
         <Logo />
-        <div className="text-sm text-muted-foreground text-right">
-            <div className="font-medium text-foreground">{meetingName}</div>
-            {meetingId && <p>Meeting ID: {meetingId}</p>}
-        </div>
       </header>
-      <main className="flex-1 overflow-auto p-4 md:p-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-          {localParticipant && (
-            <Card
-            className={cn(
-              'relative aspect-video overflow-hidden rounded-xl shadow-lg transition-all duration-300 ring-0'
-            )}
-            >
-              <div className="flex h-full w-full items-center justify-center bg-muted/50">
-                <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted />
-                 {(isVideoOff || (isScreenSharing && !screenShareStream.current)) && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-muted">
-                        <Avatar className="h-24 w-24 text-4xl lg:h-32 lg:w-32">
-                            <AvatarImage src={PlaceHolderImages.find(p => p.id === localParticipant.avatar)?.imageUrl} alt={localParticipant.name} />
-                            <AvatarFallback>{localParticipant.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                    </div>
-                 )}
-              </div>
-              {hasCameraPermission === false && !isScreenSharing && (
-                <div className="absolute inset-0 flex items-center justify-center p-4">
-                  <Alert variant="destructive">
-                    <AlertTitle>Camera Access Required</AlertTitle>
-                    <AlertDescription>
-                      Please allow camera access to use this feature. You may need to grant permissions in your browser settings.
-                    </AlertDescription>
-                  </Alert>
+      <main className="flex flex-1 items-center justify-center p-4">
+        <Tabs defaultValue="new" className="w-full max-w-md">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="new">New Meeting</TabsTrigger>
+            <TabsTrigger value="join">Join Meeting</TabsTrigger>
+          </TabsList>
+          <TabsContent value="new">
+            <Card>
+              <CardHeader>
+                <CardTitle>Create a New Meeting</CardTitle>
+                <CardDescription>Enter a name for your meeting to get started.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="meeting-name">Meeting Name</Label>
+                  <Input
+                    id="meeting-name"
+                    placeholder="E.g. Weekly Sync"
+                    value={newMeetingName}
+                    onChange={(e) => setNewMeetingName(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleCreateMeeting()}
+                  />
                 </div>
-              )}
-               <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between bg-gradient-to-t from-black/60 to-transparent p-3">
-                <span className="text-sm font-medium text-primary-foreground drop-shadow-md">
-                  {localParticipant.name} (You)
-                </span>
-                <div className="rounded-full bg-black/30 p-1.5 backdrop-blur-sm">
-                  {isMuted ? (
-                    <MicOff className="h-4 w-4 text-primary-foreground" />
-                  ) : (
-                    <Mic className="h-4 w-4 text-primary-foreground" />
-                  )}
-                </div>
-              </div>
+              </CardContent>
+              <CardFooter>
+                <Button className="w-full" onClick={handleCreateMeeting}>Create and Start Meeting</Button>
+              </CardFooter>
             </Card>
-          )}
-        </div>
+          </TabsContent>
+          <TabsContent value="join">
+            <Card>
+              <CardHeader>
+                <CardTitle>Join an Existing Meeting</CardTitle>
+                <CardDescription>Enter the meeting ID to join.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="meeting-id">Meeting ID</Label>
+                  <Input
+                    id="meeting-id"
+                    placeholder="E.g. 123-456-789"
+                    value={joinMeetingId}
+                    onChange={(e) => setJoinMeetingId(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleJoinMeeting()}
+                  />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button className="w-full" onClick={handleJoinMeeting}>Join Meeting</Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
-      <MeetingControls 
-        isScreenSharing={isScreenSharing}
-        onToggleScreenShare={toggleScreenShare}
-        isVideoOff={isVideoOff}
-        onToggleVideo={toggleVideo}
-        isMuted={isMuted}
-        onToggleMute={toggleMute}
-        isRecording={isRecording}
-        onToggleRecording={toggleRecording}
-        onLeaveMeeting={leaveMeeting}
-      />
     </div>
   );
 }
