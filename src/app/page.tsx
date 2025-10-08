@@ -30,6 +30,17 @@ export default function Home() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const [hasLeftMeeting, setHasLeftMeeting] = useState(false);
+  const [meetingId, setMeetingId] = useState('');
+
+  useEffect(() => {
+    const generateMeetingId = () => {
+      const part1 = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      const part2 = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      const part3 = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      return `${part1}-${part2}-${part3}`;
+    };
+    setMeetingId(generateMeetingId());
+  }, []);
 
   useEffect(() => {
     const getPermissions = async () => {
@@ -233,7 +244,7 @@ export default function Home() {
       <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:px-6">
         <Logo />
         <div className="text-sm text-muted-foreground">
-          <p>Meeting ID: 123-456-789</p>
+        {meetingId && <p>Meeting ID: {meetingId}</p>}
         </div>
       </header>
       <main className="flex-1 overflow-auto p-4 md:p-6">
@@ -279,23 +290,6 @@ export default function Home() {
               </div>
             </Card>
           )}
-
-          {participants
-            .filter(p => !p.isYou)
-            .map((participant) => {
-              const imageData = PlaceHolderImages.find(p => p.id === participant.avatar);
-              return (
-                <ParticipantVideo
-                  key={participant.id}
-                  name={participant.name}
-                  avatarUrl={imageData?.imageUrl || ''}
-                  isMuted={participant.isMuted}
-                  isSpeaking={participant.isSpeaking}
-                  isYou={participant.isYou}
-                  imageHint={imageData?.imageHint || ''}
-                />
-              );
-            })}
         </div>
       </main>
       <MeetingControls 
