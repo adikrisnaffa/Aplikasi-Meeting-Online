@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { MeetingControls } from '@/components/meeting-controls';
 import { Logo } from '@/components/logo';
@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { Mic, MicOff, VideoIcon } from 'lucide-react';
+import { Mic, MicOff, VideoIcon, ArrowLeft } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 
@@ -19,6 +19,7 @@ const participants = [
 
 function MeetingRoom({ meetingId: meetingIdProp }: { meetingId: string }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | undefined>(undefined);
   const { toast } = useToast();
@@ -227,9 +228,15 @@ function MeetingRoom({ meetingId: meetingIdProp }: { meetingId: string }) {
                 </div>
                 <h1 className="text-2xl font-bold tracking-tight">You have left the meeting</h1>
                 <p className="max-w-md text-muted-foreground">
-                    You can close this window or rejoin the meeting.
+                    You can close this window, rejoin the meeting or go back to home.
                 </p>
-                <Button onClick={() => window.location.reload()}>Rejoin Meeting</Button>
+                <div className="flex gap-4">
+                    <Button onClick={() => window.location.reload()}>Rejoin Meeting</Button>
+                    <Button variant="outline" onClick={() => router.push('/')}>
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Back to Home
+                    </Button>
+                </div>
             </div>
         </div>
     );
