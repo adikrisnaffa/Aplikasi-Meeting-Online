@@ -13,17 +13,18 @@ type MeetingControlsProps = {
   onToggleScreenShare: () => void;
   isVideoOff: boolean;
   onToggleVideo: () => void;
+  isMuted: boolean;
+  onToggleMute: () => void;
 };
 
-export function MeetingControls({ isScreenSharing, onToggleScreenShare, isVideoOff, onToggleVideo }: MeetingControlsProps) {
-  const [isMuted, setIsMuted] = useState(true);
+export function MeetingControls({ isScreenSharing, onToggleScreenShare, isVideoOff, onToggleVideo, isMuted, onToggleMute }: MeetingControlsProps) {
   const [isRecording, setIsRecording] = useState(false);
 
   const controlButtons = [
     {
       label: isMuted ? 'Unmute' : 'Mute',
       icon: isMuted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />,
-      onClick: () => setIsMuted(!isMuted),
+      onClick: onToggleMute,
     },
     {
       label: isVideoOff ? 'Start Video' : 'Stop Video',

@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { MicOff } from 'lucide-react';
+import { Mic, MicOff } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const participants = [
@@ -25,49 +25,63 @@ export default function Home() {
   const { toast } = useToast();
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
-  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [isMuted, setIsMuted] = useState(true);
+  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const screenShareStream = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    const getCameraPermission = async () => {
+    const getPermissions = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         setHasCameraPermission(true);
-        setCameraStream(stream);
+        setMediaStream(stream);
+
+        // Initially mute audio
+        stream.getAudioTracks().forEach(track => track.enabled = false);
+
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
       } catch (error) {
-        console.error('Error accessing camera:', error);
+        console.error('Error accessing media devices:', error);
         setHasCameraPermission(false);
         toast({
           variant: 'destructive',
-          title: 'Camera Access Denied',
-          description: 'Please enable camera permissions in your browser settings to use this app.',
+          title: 'Access Denied',
+          description: 'Please enable camera and microphone permissions in your browser settings.',
         });
       }
     };
 
-    getCameraPermission();
+    getPermissions();
 
     return () => {
-      cameraStream?.getTracks().forEach(track => track.stop());
+      mediaStream?.getTracks().forEach(track => track.stop());
     }
   }, [toast]);
 
   const toggleVideo = () => {
-    if (cameraStream) {
-      cameraStream.getVideoTracks().forEach(track => {
+    if (mediaStream) {
+      mediaStream.getVideoTracks().forEach(track => {
         track.enabled = isVideoOff;
       });
       setIsVideoOff(!isVideoOff);
       if (videoRef.current && !isScreenSharing) {
         if (isVideoOff) {
-          videoRef.current.srcObject = cameraStream;
+          videoRef.current.srcObject = mediaStream;
         } else {
           videoRef.current.srcObject = null;
         }
       }
+    }
+  };
+
+  const toggleMute = () => {
+    if (mediaStream) {
+      mediaStream.getAudioTracks().forEach(track => {
+        track.enabled = isMuted;
+      });
+      setIsMuted(!isMuted);
     }
   };
 
@@ -97,8 +111,8 @@ export default function Home() {
     screenShareStream.current = null;
     setIsScreenSharing(false);
     if (videoRef.current) {
-      if (cameraStream && !isVideoOff) {
-        videoRef.current.srcObject = cameraStream;
+      if (mediaStream && !isVideoOff) {
+        videoRef.current.srcObject = mediaStream;
       } else {
         videoRef.current.srcObject = null;
       }
@@ -149,7 +163,11 @@ export default function Home() {
                   {localParticipant.name} (You)
                 </span>
                 <div className="rounded-full bg-black/30 p-1.5 backdrop-blur-sm">
-                  <MicOff className="h-4 w-4 text-primary-foreground" />
+                  {isMuted ? (
+                    <MicOff className="h-4 w-4 text-primary-foreground" />
+                  ) : (
+                    <Mic className="h-4 w-4 text-primary-foreground" />
+                  )}
                 </div>
               </div>
             </Card>
@@ -178,6 +196,8 @@ export default function Home() {
         onToggleScreenShare={toggleScreenShare}
         isVideoOff={isVideoOff}
         onToggleVideo={toggleVideo}
+        isMuted={isMuted}
+        onToggleMute={toggleMute}
       />
     </div>
   );
