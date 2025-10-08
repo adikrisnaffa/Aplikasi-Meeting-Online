@@ -17,7 +17,7 @@ const participants = [
   { id: 1, name: 'You', avatar: 'user1', isMuted: true, isSpeaking: false, isYou: true },
 ];
 
-function MeetingRoom({ params }: { params: { meetingId: string } }) {
+function MeetingRoom({ meetingId }: { meetingId: string }) {
   const searchParams = useSearchParams();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | undefined>(undefined);
@@ -31,7 +31,6 @@ function MeetingRoom({ params }: { params: { meetingId: string } }) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const [hasLeftMeeting, setHasLeftMeeting] = useState(false);
-  const meetingId = params.meetingId;
   const meetingName = searchParams.get('name') || "Meeting";
 
   useEffect(() => {
@@ -304,9 +303,10 @@ function MeetingRoom({ params }: { params: { meetingId: string } }) {
 
 
 export default function MeetingPage({ params }: { params: { meetingId: string } }) {
+  const meetingId = params.meetingId;
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <MeetingRoom params={params} />
+      <MeetingRoom meetingId={meetingId} />
     </Suspense>
   )
 }
