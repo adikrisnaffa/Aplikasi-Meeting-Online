@@ -8,11 +8,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { Mic, MicOff, VideoIcon } from 'lucide-react';
+import { Mic, MicOff, VideoIcon, Calendar as CalendarIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
 
 const participants = [
   { id: 1, name: 'You', avatar: 'user1', isMuted: true, isSpeaking: false, isYou: true },
@@ -34,6 +37,7 @@ export default function Home() {
   const [meetingId, setMeetingId] = useState('');
   const [meetingStarted, setMeetingStarted] = useState(false);
   const [meetingName, setMeetingName] = useState('');
+  const [meetingDate, setMeetingDate] = useState<Date>();
 
   useEffect(() => {
     const generateMeetingId = () => {
@@ -254,6 +258,31 @@ export default function Home() {
                                 value={meetingName} 
                                 onChange={(e) => setMeetingName(e.target.value)}
                             />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="meeting-date">Meeting Date</Label>
+                           <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !meetingDate && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {meetingDate ? format(meetingDate, "PPP") : <span>Pick a date</span>}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                              <Calendar
+                                mode="single"
+                                selected={meetingDate}
+                                onSelect={setMeetingDate}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
                         </div>
                         <div className="space-y-2">
                             <Label>Meeting ID</Label>
