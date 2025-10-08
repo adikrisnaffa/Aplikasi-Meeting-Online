@@ -16,9 +16,10 @@ type MeetingControlsProps = {
   onToggleMute: () => void;
   isRecording: boolean;
   onToggleRecording: () => void;
+  onLeaveMeeting: () => void;
 };
 
-export function MeetingControls({ isScreenSharing, onToggleScreenShare, isVideoOff, onToggleVideo, isMuted, onToggleMute, isRecording, onToggleRecording }: MeetingControlsProps) {
+export function MeetingControls({ isScreenSharing, onToggleScreenShare, isVideoOff, onToggleVideo, isMuted, onToggleMute, isRecording, onToggleRecording, onLeaveMeeting }: MeetingControlsProps) {
 
   const controlButtons = [
     {
@@ -78,7 +79,7 @@ export function MeetingControls({ isScreenSharing, onToggleScreenShare, isVideoO
           
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="destructive" size="icon" className="h-12 w-12 rounded-full">
+              <Button variant="destructive" size="icon" className="h-12 w-12 rounded-full" onClick={onLeaveMeeting}>
                 <PhoneOff className="h-6 w-6" />
               </Button>
             </TooltipTrigger>

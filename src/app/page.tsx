@@ -9,8 +9,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { Mic, MicOff } from 'lucide-react';
+import { Mic, MicOff, VideoIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 
 const participants = [
   { id: 1, name: 'You', avatar: 'user1', isMuted: true, isSpeaking: false, isYou: true },
@@ -31,6 +32,7 @@ export default function Home() {
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
+  const [hasLeftMeeting, setHasLeftMeeting] = useState(false);
 
   useEffect(() => {
     const getPermissions = async () => {
@@ -189,8 +191,45 @@ export default function Home() {
       });
     }
   };
+  
+  const leaveMeeting = () => {
+    mediaStream?.getTracks().forEach(track => track.stop());
+    screenShareStream.current?.getTracks().forEach(track => track.stop());
+    if (videoRef.current) {
+        videoRef.current.srcObject = null;
+    }
+    if (isRecording) {
+        stopRecording();
+    }
+    setHasLeftMeeting(true);
+    toast({
+        title: "You have left the meeting.",
+    });
+  }
 
   const localParticipant = participants.find(p => p.isYou);
+
+  if (hasLeftMeeting) {
+    return (
+        <div className="flex h-screen w-full flex-col bg-background">
+             <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:px-6">
+                <Logo />
+            </header>
+            <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
+                <div className="rounded-full bg-primary/10 p-4">
+                    <div className="rounded-full bg-primary/20 p-4">
+                        <VideoIcon className="h-12 w-12 text-primary" />
+                    </div>
+                </div>
+                <h1 className="text-2xl font-bold tracking-tight">You have left the meeting</h1>
+                <p className="max-w-md text-muted-foreground">
+                    You can close this window now. Thank you for using MeetUpGo!
+                </p>
+                <Button onClick={() => window.location.reload()}>Rejoin Meeting</Button>
+            </div>
+        </div>
+    );
+  }
 
   return (
     <div className="flex h-screen w-full flex-col bg-background">
@@ -271,6 +310,7 @@ export default function Home() {
         onToggleMute={toggleMute}
         isRecording={isRecording}
         onToggleRecording={toggleRecording}
+        onLeaveMeeting={leaveMeeting}
       />
     </div>
   );
