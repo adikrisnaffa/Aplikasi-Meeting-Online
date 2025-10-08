@@ -28,6 +28,7 @@ function MeetingRoom({ meetingId: meetingIdProp }: { meetingId: string }) {
   const [isMuted, setIsMuted] = useState(true);
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const screenShareStream = useRef<MediaStream | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const recordedChunksRef = useRef<Blob[]>([]);
   const [hasLeftMeeting, setHasLeftMeeting] = useState(false);
