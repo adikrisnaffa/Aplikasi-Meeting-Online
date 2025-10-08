@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "user1",
+      "description": "Portrait of a smiling woman.",
+      "imageUrl": "https://picsum.photos/seed/user1/200/200",
+      "imageHint": "person smiling"
+    },
+    {
+      "id": "user2",
+      "description": "Professional headshot of a man.",
+      "imageUrl": "https://picsum.photos/seed/user2/200/200",
+      "imageHint": "man professional"
+    },
+    {
+      "id": "user3",
+      "description": "Person wearing glasses.",
+      "imageUrl": "https://picsum.photos/seed/user3/200/200",
+      "imageHint": "person glasses"
+    },
+    {
+      "id": "user4",
+      "description": "A person in a bright outdoor setting.",
+      "imageUrl": "https://picsum.photos/seed/user4/200/200",
+      "imageHint": "woman outdoors"
+    }
+  ]
 }
