@@ -3,17 +3,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Video } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+import { Plus, UserPlus, Calendar } from 'lucide-react';
 import { Logo } from '@/components/logo';
+import { JoinMeetingDialog } from '@/components/join-meeting-dialog';
 
 export default function LobbyPage() {
   const [meetingName, setMeetingName] = useState('');
   const router = useRouter();
   const { toast } = useToast();
+  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
 
   const generateMeetingId = () => {
     const part1 = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
@@ -23,52 +22,43 @@ export default function LobbyPage() {
   };
 
   const handleCreateMeeting = () => {
-    if (!meetingName.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Meeting name required",
-        description: "Please enter a name for your meeting.",
-      });
-      return;
-    }
     const meetingId = generateMeetingId();
-    router.push(`/meeting/${meetingId}?name=${encodeURIComponent(meetingName)}`);
+    // Untuk pembuatan meeting baru, kita bisa langsung arahkan atau munculkan dialog untuk nama meeting
+    // Untuk simple, kita langsung buat dan arahkan.
+    router.push(`/meeting/${meetingId}?name=Meeting`);
   };
+  
+  const handleScheduleMeeting = () => {
+    toast({
+        title: "Feature Coming Soon",
+        description: "Scheduling meetings is not yet implemented.",
+    });
+  }
 
   return (
     <div className="flex h-screen w-full items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
+      <div className="w-full max-w-md text-center">
+        <div className="mb-8">
             <div className="flex justify-center items-center mb-4">
                 <Logo />
             </div>
-          <h1 className="text-3xl font-bold">Video Conferencing</h1>
-          <p className="text-muted-foreground">Start or join a meeting instantly.</p>
+          <h1 className="text-3xl font-bold">MeetUpGo</h1>
+          <p className="text-muted-foreground">Video conferencing that's simple, secure and powerful.</p>
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Create a New Meeting</CardTitle>
-            <CardDescription>Give your meeting a name to get started.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="meeting-name">Meeting Name</Label>
-              <Input
-                id="meeting-name"
-                placeholder="e.g. Team Standup"
-                value={meetingName}
-                onChange={(e) => setMeetingName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleCreateMeeting()}
-              />
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button className="w-full" onClick={handleCreateMeeting}>
-              <Video className="mr-2 h-4 w-4" /> Start Meeting
-            </Button>
-          </CardFooter>
-        </Card>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Button onClick={handleCreateMeeting} className="h-12 text-base">
+            <Plus className="mr-2 h-5 w-5" /> New Meeting
+          </Button>
+          <Button onClick={() => setIsJoinDialogOpen(true)} variant="outline" className="h-12 text-base">
+            <UserPlus className="mr-2 h-5 w-5" /> Join
+          </Button>
+          <Button onClick={handleScheduleMeeting} variant="outline" className="h-12 text-base">
+            <Calendar className="mr-2 h-5 w-5" /> Schedule
+          </Button>
+        </div>
       </div>
+      <JoinMeetingDialog isOpen={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen} />
     </div>
   );
 }
