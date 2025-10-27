@@ -9,7 +9,6 @@
     "build": "NODE_ENV=production next build",
     "start": "next start",
     "lint": "next lint",
-    "build": "next build",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
