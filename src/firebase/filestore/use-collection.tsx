@@ -32,28 +32,3 @@ export function useCollection<T>(path: string) {
 
   return { data, loading };
 }
-
-export function useDoc<T>(path: string, docId: string) {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
-  const firestore = useFirestore();
-
-  useEffect(() => {
-    if (!firestore) {
-      return;
-    }
-    const docRef = collection(firestore, path, docId);
-    const unsubscribe = onSnapshot(docRef, (snapshot) => {
-      if (snapshot.exists()) {
-        setData({ id: snapshot.id, ...snapshot.data() } as T);
-      } else {
-        setData(null);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [firestore, path, docId]);
-
-  return { data, loading };
-}
