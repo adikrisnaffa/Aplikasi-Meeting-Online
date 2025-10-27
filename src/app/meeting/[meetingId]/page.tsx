@@ -320,5 +320,3 @@ function Page({ params }: { params: { meetingId: string } }) {
 }
 
 export default Page;
-
-    
