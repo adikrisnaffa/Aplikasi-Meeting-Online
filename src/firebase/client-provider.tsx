@@ -1,5 +1,5 @@
 'use client';
-import { initializeFirebase } from '.';
+import { initializeFirebase } from './index';
 import { FirebaseProvider } from './provider';
 
 // This provider is a client component that ensures firebase is initialized only once.
