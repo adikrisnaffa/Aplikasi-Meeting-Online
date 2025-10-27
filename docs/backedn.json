@@ -1,0 +1,48 @@
+{
+  "entities": {
+    "participant": {
+      "title": "Participant",
+      "description": "A user participating in a meeting.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the participant."
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name of the participant."
+        },
+        "avatar": {
+          "type": "string",
+          "description": "ID of the placeholder image for the participant's avatar."
+        },
+        "isMuted": {
+          "type": "boolean",
+          "description": "Whether the participant is muted."
+        },
+        "isSpeaking": {
+          "type": "boolean",
+          "description": "Whether the participant is currently speaking."
+        },
+        "joinedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the participant joined."
+        }
+      },
+      "required": ["id", "name", "avatar", "isMuted", "joinedAt"]
+    }
+  },
+  "auth": {
+    "providers": []
+  },
+  "firestore": {
+    "/meetings/{meetingId}/participants/{participantId}": {
+      "schema": {
+        "$ref": "#/entities/participant"
+      },
+      "description": "Stores the participants for a specific meeting."
+    }
+  }
+}
