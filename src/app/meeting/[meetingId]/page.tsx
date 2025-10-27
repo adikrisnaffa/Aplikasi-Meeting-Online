@@ -17,7 +17,7 @@ const participants = [
   { id: 1, name: 'You', avatar: 'user1', isMuted: true, isSpeaking: false, isYou: true },
 ];
 
-function MeetingRoom({ meetingId: meetingIdProp }: { meetingId: string }) {
+function MeetingRoom({ meetingId }: { meetingId: string }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -32,14 +32,11 @@ function MeetingRoom({ meetingId: meetingIdProp }: { meetingId: string }) {
   const [isRecording, setIsRecording] = useState(false);
   const recordedChunksRef = useRef<Blob[]>([]);
   const [hasLeftMeeting, setHasLeftMeeting] = useState(false);
-  const [meetingId, setMeetingId] = useState('');
   const meetingName = searchParams.get('name') || "Meeting";
 
   useEffect(() => {
-    // This runs only on the client, avoiding hydration errors
-    setMeetingId(meetingIdProp);
     getPermissions();
-  }, [meetingIdProp]);
+  }, []);
 
   const getPermissions = async () => {
     try {
