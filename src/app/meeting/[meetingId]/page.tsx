@@ -311,6 +311,7 @@ function MeetingRoom({ meetingId: meetingIdProp }: { meetingId: string }) {
   );
 }
 
+// This is the Server Component that will handle the params
 function Page({ params }: { params: { meetingId: string } }) {
   return (
     <Suspense fallback={<div>Loading...</div>}>
