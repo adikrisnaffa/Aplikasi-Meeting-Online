@@ -21,7 +21,7 @@ export default function MeetingRoom({ meetingId: meetingIdProp }: { meetingId: s
   const searchParams = useSearchParams();
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | undefined>(undefined);
+  const [hasCameraPermission, setHasCameraPermission] = useState(true);
   const { toast } = useToast();
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
@@ -35,17 +35,27 @@ export default function MeetingRoom({ meetingId: meetingIdProp }: { meetingId: s
   const [meetingId, setMeetingId] = useState('');
   const meetingName = searchParams.get('name') || "Meeting";
 
-  useEffect(() => {
-    setMeetingId(meetingIdProp);
-    getPermissions();
-  }, [meetingIdProp]);
+useEffect(() => {
+  setMeetingId(meetingIdProp);
 
   const getPermissions = async () => {
+    // Pastikan dijalankan di browser dan navigator tersedia
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      console.warn("navigator.mediaDevices tidak tersedia. Pastikan dijalankan di browser (HTTPS).");
+      setHasCameraPermission(false);
+      toast({
+        variant: 'destructive',
+        title: 'Camera not available',
+        description: 'This feature only works in a secure browser environment (HTTPS).',
+      });
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       setHasCameraPermission(true);
       setMediaStream(stream);
-      stream.getAudioTracks().forEach(track => track.enabled = false);
+      stream.getAudioTracks().forEach(track => (track.enabled = false));
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -60,6 +70,10 @@ export default function MeetingRoom({ meetingId: meetingIdProp }: { meetingId: s
       });
     }
   };
+
+  getPermissions();
+}, [meetingIdProp, toast]);
+
 
   useEffect(() => {
     return () => {
@@ -224,7 +238,7 @@ export default function MeetingRoom({ meetingId: meetingIdProp }: { meetingId: s
             <Card className={cn('relative aspect-video overflow-hidden rounded-xl shadow-lg')}>
               <div className="flex h-full w-full items-center justify-center bg-muted/50">
                 <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted />
-                {(isVideoOff || (isScreenSharing && !screenShareStream.current)) && (
+                {isVideoOff && (
                   <div className="absolute inset-0 flex items-center justify-center bg-muted">
                     <Avatar className="h-24 w-24 text-4xl lg:h-32 lg:w-32">
                       <AvatarImage src={PlaceHolderImages.find(p => p.id === localParticipant.avatar)?.imageUrl} alt={localParticipant.name} />
@@ -233,7 +247,7 @@ export default function MeetingRoom({ meetingId: meetingIdProp }: { meetingId: s
                   </div>
                 )}
               </div>
-              {hasCameraPermission === false && !isScreenSharing && (
+              {!hasCameraPermission && !isScreenSharing && (
                 <div className="absolute inset-0 flex items-center justify-center p-4">
                   <Alert variant="destructive">
                     <AlertTitle>Camera Access Required</AlertTitle>
