@@ -1,6 +1,10 @@
+// This file is split into two components based on Next.js App Router conventions.
+// The Page component is a Server Component, responsible for fetching data and parameters.
+// The MeetingRoom component is a Client Component, handling all user interactions and state.
+
 'use client';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { MeetingControls } from '@/components/meeting-controls';
@@ -309,10 +313,9 @@ function MeetingRoom({ meetingId }: { meetingId: string }) {
 }
 
 // This is the Server Component that will handle the params
+// It is kept separate from the Client Component to follow Next.js best practices.
 export default function Page({ params }: { params: { meetingId: string } }) {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <MeetingRoom meetingId={params.meetingId} />
-    </Suspense>
-  );
+  const { meetingId } = params;
+
+  return <MeetingRoom meetingId={meetingId} />;
 }
