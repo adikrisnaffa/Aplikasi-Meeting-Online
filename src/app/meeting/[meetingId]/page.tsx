@@ -309,12 +309,10 @@ function MeetingRoom({ meetingId }: { meetingId: string }) {
 }
 
 // This is the Server Component that will handle the params
-function Page({ params }: { params: { meetingId: string } }) {
+export default function Page({ params }: { params: { meetingId: string } }) {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <MeetingRoom meetingId={params.meetingId} />
     </Suspense>
   );
 }
-
-export default Page;
