@@ -55,13 +55,11 @@ export default function MeetingRoom({
   const meetingName = searchParams.get('name') || 'Meeting';
   const firestore = useFirestore();
   const [participants, setParticipants] = useState<Participant[]>([]);
-  const localParticipantIdRef = useRef<string>(`user-${Date.now()}`);
+  const localParticipantRef = useRef<Participant | null>(null);
 
-  const localParticipant = participants.find(
-    (p) => p.id === localParticipantIdRef.current
-  );
+  const localParticipant = localParticipantRef.current;
   const remoteParticipants = participants.filter(
-    (p) => p.id !== localParticipantIdRef.current
+    (p) => p.id !== localParticipant?.id
   );
 
   useEffect(() => {
@@ -72,37 +70,38 @@ export default function MeetingRoom({
   useEffect(() => {
     if (!firestore || !meetingId) return;
 
-    const participantRef = doc(
-      firestore,
-      'meetings',
-      meetingId,
-      'participants',
-      localParticipantIdRef.current
-    );
+    const participantsCol = collection(
+        firestore,
+        'meetings',
+        meetingId,
+        'participants'
+      );
+
+    // Generate a new document reference with a unique ID
+    const participantRef = doc(participantsCol);
+    const participantId = participantRef.id;
 
     const joinMeeting = async () => {
       const randomAvatar =
         PlaceHolderImages[
           Math.floor(Math.random() * PlaceHolderImages.length)
         ].id;
-      await setDoc(participantRef, {
-        id: localParticipantIdRef.current,
+      
+      const newParticipant: Participant = {
+        id: participantId,
         name: 'Guest', // You can enhance this later
         avatar: randomAvatar,
         isMuted: isMuted,
         isSpeaking: false,
         joinedAt: serverTimestamp(),
-      });
+      };
+      
+      await setDoc(participantRef, newParticipant);
+      localParticipantRef.current = newParticipant;
     };
 
     joinMeeting();
 
-    const participantsCol = collection(
-      firestore,
-      'meetings',
-      meetingId,
-      'participants'
-    );
     const unsubscribeParticipants = onSnapshot(participantsCol, (snapshot) => {
       const newParticipants: Participant[] = [];
       snapshot.forEach((doc) => {
@@ -163,13 +162,13 @@ export default function MeetingRoom({
   }, [toast, isMuted]);
 
   const updateParticipantMuteStatus = async (muted: boolean) => {
-     if (!firestore || !meetingId) return;
+     if (!firestore || !meetingId || !localParticipant) return;
      const participantRef = doc(
       firestore,
       'meetings',
       meetingId,
       'participants',
-      localParticipantIdRef.current
+      localParticipant.id
     );
     await setDoc(participantRef, { isMuted: muted }, { merge: true });
   }
@@ -299,8 +298,8 @@ export default function MeetingRoom({
   };
 
   const leaveMeeting = () => {
-    if (firestore && meetingId) {
-      const participantRef = doc(firestore, 'meetings', meetingId, 'participants', localParticipantIdRef.current);
+    if (firestore && meetingId && localParticipant) {
+      const participantRef = doc(firestore, 'meetings', meetingId, 'participants', localParticipant.id);
       deleteDoc(participantRef);
     }
     mediaStream?.getTracks().forEach((track) => track.stop());
@@ -438,5 +437,3 @@ export default function MeetingRoom({
     </div>
   );
 }
-
-    

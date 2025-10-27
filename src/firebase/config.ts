@@ -4,10 +4,11 @@
 // For more information on how to use Firebase, refer to the documentation:
 // https://firebase.google.com/docs/web/setup
 export const firebaseConfig = {
-  "apiKey": "AIzaSyCVAkH-u-c3v-1-gIzz0c_TCkoLmqA_vw",
-  "authDomain": "meetupgo-2024.firebaseapp.com",
-  "projectId": "meetupgo-2024",
-  "storageBucket": "meetupgo-2024.appspot.com",
-  "messagingSenderId": "1004184311186",
-  "appId": "1:1004184311186:web:1d63c52e464c12658a0346"
+  apiKey: "AIzaSyA3qdY8UUgynhUzTsl87qkC1QGKd0zGKtc",
+  authDomain: "apps-meet.firebaseapp.com",
+  projectId: "apps-meet",
+  storageBucket: "apps-meet.firebasestorage.app",
+  messagingSenderId: "777410946795",
+  appId: "1:777410946795:web:b95fb5160c2d69c42b40ae",
+  measurementId: "G-GEXTJ5HHFN"
 };
